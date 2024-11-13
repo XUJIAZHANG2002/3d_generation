@@ -1,0 +1,123 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/festo/robotino3/protos/Robotino3Webcam.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/fruits/protos/Apple.proto"
+
+WorldInfo {
+  gravity 9.18
+}
+Viewpoint {
+  orientation -0.3235624185029279 0.3100592810349231 0.8939634240709419 1.724910410334973
+  position -0.022628448519510375 -2.4252706514747233 1.7254777883946268
+}
+DEF Body Pose {
+}
+RectangleArena {
+  floorSize 2 2
+  floorAppearance PBRAppearance {
+    transparency 1
+  }
+  wallAppearance PBRAppearance {
+    transparency 1
+  }
+}
+Robot {
+  translation -0.67 0 0.015
+  rotation -0.001315518112471441 -0.01624603206767599 0.999867159103724 0
+  children [
+    Lidar {
+      translation 0 0 0.15
+      fieldOfView 0.5
+      numberOfLayers 6
+    }
+    Compass {
+    }
+    GPS {
+    }
+    RangeFinder {
+      translation 0.09 0.015 0.1
+    }
+    DEF Body Pose {
+      translation 0 0 0.0415
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 0 1
+            roughness 1
+            metalness 0
+          }
+          geometry Cylinder {
+            height 0.08
+            radius 0.045
+          }
+        }
+      ]
+    }
+    Robotino3Webcam {
+      translation -0.1 0 -0.2
+      rotation 0 0 1 1.5708003061004252
+      name "camera"
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 408.2564818395829
+        anchor 0.045 0 0.025
+      }
+      device [
+        RotationalMotor {
+          name "motor_1"
+        }
+      ]
+      endPoint Solid {
+        translation 0.04507309038014651 -3.4337486065908074e-06 0.02503206162582556
+        rotation 0.07440568337172132 -0.994362424127173 0.07554577265419443 4.706023906862349
+        children [
+          DEF wheel Shape {
+            geometry Cylinder {
+              height 0.01
+              radius 0.025
+            }
+          }
+        ]
+        boundingObject USE wheel
+        physics DEF wheel_physics Physics {
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 543.8305211980424
+        anchor -0.045 0 0.025
+      }
+      device [
+        RotationalMotor {
+          name "motor_2"
+        }
+      ]
+      endPoint Solid {
+        translation -0.04505445655008966 2.4660308188562802e-05 0.024959046768199905
+        rotation 0.7019980009821192 -0.11713453200881178 0.7024801121940644 3.3811191376994323
+        children [
+          USE wheel
+        ]
+        name "solid(1)"
+        boundingObject USE wheel
+        physics USE wheel_physics
+      }
+    }
+  ]
+  boundingObject USE Body
+  physics Physics {
+  }
+  controller "test"
+}
+Apple {
+  translation 0 0 0.109976
+  scale 2
+}
+Background {
+  skyColor [
+    1 1 1
+  ]
+}
