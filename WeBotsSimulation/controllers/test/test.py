@@ -61,7 +61,7 @@ right_motor.setVelocity(0.0)
 point_cloud = []
 # if not os.path.exists("images"):
     # os.makedirs("images")
-path = "../../dataset/WeBotsDatset/"
+path = "../../../dataset/WeBotsDataset/"
 directories = ['d','rgb','point_cloud']
 for directory in directories:
     directory=path+directory
