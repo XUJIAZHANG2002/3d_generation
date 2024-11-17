@@ -1,111 +1,119 @@
+from controller import Supervisor
 import numpy as np
 import os
-from controller import Robot
-from controller import Camera
+from scipy.spatial.transform import Rotation as R
 
+# Initialize Supervisor (no Robot instance here)
+supervisor = Supervisor()
 
-def save_point_cloud_as_xyz(point_cloud, filename="point_cloud.xyz"):
-    with open(filename, "a") as f:
-        for point in point_cloud:
-            # Access the x, y, z attributes of each LidarPoint object
-            # f.write(f"{point.x} {point.y} {point.z}\n")
-            f.write(f"{point[0]} {point[1]} {point[2]}\n")
-    print(f"Point cloud saved as {filename}")
+# Time step and motor setup
+timestep = int(supervisor.getBasicTimeStep())
+max_speed = 6.28
 
-def get_robot_pose(gps, compass):
-    # Get the position (x, y) from the GPS
-    position = gps.getValues()
-    x, y = position[0], position[1]
-    
-    # Get orientation from compass (returns a vector)
-    north = compass.getValues()
-    theta = np.arctan2(north[0], north[2]-1.57)  # Orientation in radians
-    # print(x,y,theta)
-    
-    return x, y, theta
+# Get robot node (Supervisor node)
+robot_node = supervisor.getFromDef("robot123")  # Replace "robot" with your robot's DEF name
 
-def transform_to_world_frame(local_x, local_y, local_z, robot_x, robot_y, robot_theta):
-    if any(np.isnan(val) or np.isinf(val) for val in [local_x, local_y, local_z, robot_x, robot_y, robot_theta]):
-        return float('inf'),float('inf'),float('inf')  # Return None to indicate invalid data
-    
-    world_x = robot_x - local_x
-    world_y = robot_y - local_y
-    world_z = local_z  # If you are in 2D, the Z value can be constant (or omitted)
-    
-    return world_x, world_y, world_z
-    
-robot = Robot()
+if robot_node is None:
+    print("Error: Robot node not found. Make sure the DEF name is correct in the world file.")
+    supervisor.simulationQuit(1)
 
-timestep = int(robot.getBasicTimeStep())
-max_speed =6.28
-left_motor = robot.getDevice('motor_1')
-right_motor = robot.getDevice('motor_2')
-camera = robot.getDevice('camera')
-camera.enable(64)
-rf = robot.getDevice('range-finder')
-rf.enable(64)
-lidar = robot.getDevice('lidar')
-lidar.enable(64)
-lidar.enablePointCloud()
-
-gps = robot.getDevice('gps')
-gps.enable(timestep)
-compass = robot.getDevice('compass')
-compass.enable(timestep)
-
+# Motor setup
+left_motor = supervisor.getDevice('motor_1')
+right_motor = supervisor.getDevice('motor_2')
 left_motor.setPosition(float('inf'))
 left_motor.setVelocity(0.0)
-
 right_motor.setPosition(float('inf'))
 right_motor.setVelocity(0.0)
-point_cloud = []
-# if not os.path.exists("images"):
-    # os.makedirs("images")
+
+# Device setup
+camera = supervisor.getDevice('camera')
+camera.enable(timestep)
+rf = supervisor.getDevice('range-finder')
+rf.enable(timestep)
+lidar = supervisor.getDevice('lidar')
+lidar.enable(timestep)
+lidar.enablePointCloud()
+
+gps = supervisor.getDevice('gps')
+gps.enable(timestep)
+compass = supervisor.getDevice('compass')
+compass.enable(timestep)
+
+# Directories for saving data
 path = "../../../dataset/WeBotsDataset/"
-directories = ['d','rgb','point_cloud']
+directories = ['d', 'rgb', 'point_cloud']
 for directory in directories:
-    directory=path+directory
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    directory_path = os.path.join(path, directory)
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
 
-start_time = robot.getTime()
-last_save_time = start_time  # Variable to track the last saved time
+# Helper functions
+def get_robot_pose(robot_node):
+    """
+    Retrieves the robot's position and orientation (rotation matrix) in the world frame.
+    """
+    position = robot_node.getPosition()  # [x, y, z]
+    orientation_matrix = robot_node.getOrientation()  # 3x3 rotation matrix
+    return np.array(position), np.array(orientation_matrix)
 
-while robot.step(timestep) != 1:
-    current_time = robot.getTime()
+def transform_point_cloud(local_point_cloud, position, orientation_matrix):
+    """
+    Transforms a point cloud from the robot's local frame to the world frame.
+    """
+    transformed_points = []
+    for point in local_point_cloud:
+        world_point = np.dot(orientation_matrix, point) + position
+        transformed_points.append(world_point)
+    return np.array(transformed_points)
+
+def save_point_cloud_as_xyz(point_cloud, filename):
+    """
+    Saves a point cloud to an XYZ file.
+    """
+    np.savetxt(filename, point_cloud, fmt="%.6f", header="x y z", comments='')
+
+# Main loop
+start_time = supervisor.getTime()
+last_save_time = start_time
+world_point_cloud = []
+
+while supervisor.step(timestep) != -1:
+    current_time = supervisor.getTime()
     elapsed_time = current_time - start_time
     time_since_last_save = current_time - last_save_time
-    if elapsed_time >= 32:
-        print("Stopping simulation after 32 seconds.")
-        # robot.simulationQuit(0)  # This stops the simulation
+
+    # Stop simulation after 22 seconds
+    if elapsed_time >= 22:
+        print("Stopping simulation after 22 seconds.")
         left_motor.setVelocity(0.0)
         right_motor.setVelocity(0.0)
         break
-    left_speed = 0.88 * max_speed
+
+    # Set motor speeds
+    left_speed = 0.825 * max_speed
     right_speed = 1 * max_speed
     left_motor.setVelocity(left_speed)
     right_motor.setVelocity(right_speed)
-    
-    
-    robot_x, robot_y, robot_theta = get_robot_pose(gps, compass)
-    
-    # Save RGB image after every second
-    if time_since_last_save >= 1:
-        raw_points = lidar.getPointCloud()
-        for point in raw_points:
-        # print(point.x,point.y,point.z)
-            local_x, local_y, local_z = point.x, point.y, point.z  # Local frame coordinates
-            world_x, world_y, world_z = transform_to_world_frame(local_x, local_y, local_z, robot_x, robot_y, robot_theta)
-            if np.isinf(world_x) or np.isinf(world_y) or np.isinf(world_z):
-                continue
-            point_cloud.append((world_x, world_y, world_z))
-            
-        rf.saveImage(path + 'd/'+ str(int(elapsed_time)) + "_depth.png",quality=100)
-        camera.saveImage(path + 'rgb/' + str(int(elapsed_time)) + "_rgb.png",quality=100)
 
-        # Save the point cloud
-        if len(point_cloud) > 0:
-            save_point_cloud_as_xyz(point_cloud, filename=path + 'point_cloud/' + 'apple_pc.xyz' )
-            point_cloud = []
+    # Perform periodic saving
+    if time_since_last_save >= 1:
+        # Get robot pose
+        position, orientation_matrix = get_robot_pose(robot_node)
+
+        # Get local point cloud from LiDAR
+        local_point_cloud = lidar.getPointCloud()
+        if local_point_cloud:
+            # Transform point cloud to world coordinates
+            transformed_cloud = transform_point_cloud(local_point_cloud, position, orientation_matrix)
+            world_point_cloud.extend(transformed_cloud)
+
+            # Save the point cloud to a file
+            filename = os.path.join(path, 'point_cloud', f"apple_pc_{int(elapsed_time)}.xyz")
+            save_point_cloud_as_xyz(transformed_cloud, filename)
+
+        # Save depth and RGB images
+        rf.saveImage(os.path.join(path, 'd', f"{int(elapsed_time)}_depth.png"), quality=100)
+        camera.saveImage(os.path.join(path, 'rgb', f"{int(elapsed_time)}_rgb.png"), quality=100)
+
+        # Update the last save time
         last_save_time = current_time
-        
