@@ -8,8 +8,8 @@ WorldInfo {
   gravity 9.18
 }
 Viewpoint {
-  orientation -0.3235624185029279 0.3100592810349231 0.8939634240709419 1.724910410334973
-  position -0.022628448519510375 -2.4252706514747233 1.7254777883946268
+  orientation 0.5458827744418958 0.5414428717583019 -0.639415055491925 2.0111914987072153
+  position 0.16309161797077418 0.3680127199873555 3.1215289946686444
 }
 DEF Body Pose {
 }
@@ -22,14 +22,20 @@ RectangleArena {
     transparency 1
   }
 }
-Robot {
-  translation -0.67 0 0.015
-  rotation -0.001315518112471441 -0.01624603206767599 0.999867159103724 0
+DEF ROB Robot {
+  translation 0 0.5 0
+  rotation 0 0 -1 1.5707996938995747
   children [
+    InertialUnit {
+      translation -0.01 0 0
+      rotation 0 0 -1 0
+      name "imu"
+    }
     Lidar {
-      translation 0 0 0.15
-      fieldOfView 0.5
-      numberOfLayers 6
+      translation 0.01 0 0.11
+      fieldOfView 0.7
+      verticalFieldOfView 0.7
+      numberOfLayers 50
     }
     Compass {
     }
@@ -61,7 +67,7 @@ Robot {
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 408.2564818395829
+        position 600.5169884160529
         anchor 0.045 0 0.025
       }
       device [
@@ -70,8 +76,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.04507309038014651 -3.4337486065908074e-06 0.02503206162582556
-        rotation 0.07440568337172132 -0.994362424127173 0.07554577265419443 4.706023906862349
+        translation 0.045073090380146286 2.1504310780816584e-05 0.02497597286746378
+        rotation -0.6967347685173485 0.16761716134884405 -0.6974705366970222 2.8082311213145106
         children [
           DEF wheel Shape {
             geometry Cylinder {
@@ -87,7 +93,7 @@ Robot {
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 543.8305211980424
+        position 762.1437770537159
         anchor -0.045 0 0.025
       }
       device [
@@ -96,8 +102,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation -0.04505445655008966 2.4660308188562802e-05 0.024959046768199905
-        rotation 0.7019980009821192 -0.11713453200881178 0.7024801121940644 3.3811191376994323
+        translation -0.04505445655008966 -4.1614257457828526e-05 0.024976472323296577
+        rotation -0.6287087941177594 -0.46058432543160743 -0.6265678984481283 4.0001808074700635
         children [
           USE wheel
         ]
@@ -110,10 +116,10 @@ Robot {
   boundingObject USE Body
   physics Physics {
   }
-  controller "test"
+  controller "supervisor"
 }
 Apple {
-  translation 0 0 0.109976
+  translation 0 0 0.15
   scale 2
 }
 Background {
