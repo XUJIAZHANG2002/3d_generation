@@ -8,13 +8,13 @@ WorldInfo {
   gravity 9.18
 }
 Viewpoint {
-  orientation 0.5458827744418958 0.5414428717583019 -0.639415055491925 2.0111914987072153
-  position 0.16309161797077418 0.3680127199873555 3.1215289946686444
+  orientation 0.07019733051471312 0.06426353115587335 -0.9954609652577976 1.6634901928409236
+  position 0.1245138129158996 1.6654001146348196 0.4338254735958944
 }
 DEF Body Pose {
 }
 RectangleArena {
-  floorSize 2 2
+  floorSize 10 10
   floorAppearance PBRAppearance {
     transparency 1
   }
@@ -33,9 +33,9 @@ DEF ROB Robot {
     }
     Lidar {
       translation 0.01 0 0.11
-      fieldOfView 0.7
-      verticalFieldOfView 0.7
-      numberOfLayers 50
+      fieldOfView 1
+      verticalFieldOfView 1
+      numberOfLayers 75
     }
     Compass {
     }
@@ -118,12 +118,11 @@ DEF ROB Robot {
   }
   controller "supervisor"
 }
-Apple {
-  translation 0 0 0.15
-  scale 2
-}
 Background {
   skyColor [
     1 1 1
   ]
+}
+Apple {
+  scale 2
 }
