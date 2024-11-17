@@ -5,7 +5,7 @@ import math
 
 # Initialize the Robot
 robot = Robot()
-
+object_name = "apple"
 # Time step and motor setup
 timestep = int(robot.getBasicTimeStep())
 max_speed = 6.28
@@ -36,7 +36,7 @@ right_motor.setPosition(float('inf'))
 right_motor.setVelocity(0.0)
 
 # Directory setup for saving data
-path = "../../../dataset/WeBotsDataset/"
+path = f"../../../dataset/WeBotsDataset/{object_name}"
 directories = ['d', 'rgb', 'point_cloud']
 for directory in directories:
     directory_path = os.path.join(path, directory)
@@ -119,7 +119,6 @@ def main():
     last_save_time = start_time
     world_point_cloud = []
     while robot.step(timestep) != -1:
-        # print(get_robot_pose(gps, imu))
         current_time = robot.getTime()
         elapsed_time = current_time - start_time
         time_since_last_save = current_time - last_save_time
@@ -141,20 +140,20 @@ def main():
         if time_since_last_save >= 1:
             # Get robot pose using GPS and Compass
             position, quaternion = get_robot_pose(gps, imu)
-            # print(position, quaternion)
             local_point_cloud = lidar.getPointCloud()
+            
             if local_point_cloud:
                 # Transform point cloud to world coordinates
                 transformed_cloud = transform_point_cloud(local_point_cloud, position, quaternion)
                 world_point_cloud.extend(transformed_cloud)
     
                 # Save the point cloud to a file
-                filename = os.path.join(path, 'point_cloud', f"apple_pc.xyz")
+                filename = os.path.join(path, 'point_cloud', f"point_cloud.xyz")
                 save_point_cloud_as_xyz(transformed_cloud, filename)
     
             # Save depth and RGB images
-            rf.saveImage(os.path.join(path, 'd', f"{int(elapsed_time)}_depth_apple.png"), quality=100)
-            camera.saveImage(os.path.join(path, 'rgb', f"{int(elapsed_time)}_rgb_apple.png"), quality=100)
+            rf.saveImage(os.path.join(path, 'd', f"{int(elapsed_time)}_depth.png"), quality=100)
+            camera.saveImage(os.path.join(path, 'rgb', f"{int(elapsed_time)}_rgb.png"), quality=100)
     
             # Update the last save time
             last_save_time = current_time
