@@ -1,11 +1,11 @@
 import torch.nn as nn
 import torch
 import math
-from unet import Unet3D
+from .unet import Unet3D
 from tqdm import tqdm
 
 class Diffusion(nn.Module):
-    def __init__(self,image_size,in_channels,time_embedding_dim=256,timesteps=100,base_dim=32,dim_mults= [1, 2, 4, 8]):
+    def __init__(self,image_size,in_channels,time_embedding_dim=256,timesteps=1000,base_dim=32,dim_mults= [1, 2, 4, 8]):
         super().__init__()
         self.timesteps=timesteps
         self.in_channels=in_channels
@@ -26,8 +26,14 @@ class Diffusion(nn.Module):
 
     def forward(self,x,noise):
         # x:NCHWD
+        
         t=torch.randint(0,self.timesteps,(x.shape[0],)).to(x.device)
         x_t=self._forward_diffusion(x,t,noise)
+        x_t = x_t.unsqueeze(1)
+        # import numpy as np
+        # print(np.mean(x.cpu().numpy()))
+        # print("noise",np.mean(noise.cpu().numpy()))
+        # print("xt",np.mean(x_t.cpu().numpy()))
         pred_noise=self.model(x_t,t)
 
         return pred_noise

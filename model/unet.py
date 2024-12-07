@@ -141,7 +141,7 @@ class Unet3D(nn.Module):
     '''
     Simple U-Net design (3D, without attention, with channel shuffle).
     '''
-    def __init__(self, timesteps, time_embedding_dim, in_channels=1, out_channels=1, base_dim=16, dim_mults=[2, 4, 8, 16]):
+    def __init__(self, timesteps, time_embedding_dim, in_channels=1, out_channels=1, base_dim=32, dim_mults=[1, 2, 4, 8]):
         super().__init__()
         assert isinstance(dim_mults, (list, tuple))
         assert base_dim % 2 == 0
@@ -186,9 +186,9 @@ class Unet3D(nn.Module):
 
 
 if __name__ == "__main__":
-    x = torch.randn(2, 1, 32, 32, 32)  # Example input (batch, channel, depth, height, width)
+    x = torch.randn(2, 1, 64, 64, 64)  # Example input (batch, channel, depth, height, width)
 
     t = torch.randint(0, 1000, (2,))  # Example timesteps
-    model = Unet3D(1000, 128, in_channels=1, out_channels=2)
+    model = Unet3D(1000, 128, in_channels=1, out_channels=1)
     y = model(x, t)
     print(y.shape)  # Output shape

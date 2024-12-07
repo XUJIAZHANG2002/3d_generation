@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 def visualize_voxel_map(voxel_1d_array, visualize = False, save = False, save_dir = None):
-    voxel_1d_array += 1
-    voxel_1d_array *=0.5
-    binary_data = (voxel_1d_array > 0.7).astype(int)
+    # voxel_1d_array += 1
+    # voxel_1d_array *=0.5
+    binary_data = (voxel_1d_array > 0.5).astype(int)
 
 
     # Parameters for voxel map
@@ -14,7 +14,7 @@ def visualize_voxel_map(voxel_1d_array, visualize = False, save = False, save_di
 
     # Reshape binary data into 8x8x8 by averaging blocks of 4x4x4
     reshaped_data = binary_data.reshape(grid_size, 1,grid_size, 1, grid_size, 1).mean(axis=(1, 3, 5))
-    voxel_data = (reshaped_data > 0.5).astype(int)  # Convert to binary based on average
+    voxel_data = (reshaped_data > 0.8).astype(int)  # Convert to binary based on average
 
     # Prepare the 3D plot
     fig = plt.figure(figsize=(10, 10))
