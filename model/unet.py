@@ -48,6 +48,7 @@ class ResidualBottleneck(nn.Module):
         self.channel_shuffle = ChannelShuffle(2)
 
     def forward(self, x):
+
         x1, x2 = x.chunk(2, dim=1)
         x = torch.cat([self.branch1(x1), self.branch2(x2)], dim=1)
         x = self.channel_shuffle(x)
@@ -113,6 +114,7 @@ class EncoderBlock(nn.Module):
         if t is not None:
             x = self.time_mlp(x_shortcut, t)
         x = self.conv1(x)
+        print("xshape",x.shape,"shortcutshape",x_shortcut.shape)
         return [x, x_shortcut]
 
 
@@ -147,7 +149,8 @@ class Unet3D(nn.Module):
         assert base_dim % 2 == 0
 
         channels = self._cal_channels(base_dim, dim_mults)
-
+        self.base_dim = base_dim
+        self.dim_mults = dim_mults
         self.init_conv = ConvBnSiLu(in_channels, base_dim, 3, 1, 1)
         self.time_embedding = nn.Embedding(timesteps, time_embedding_dim)
 
@@ -163,15 +166,19 @@ class Unet3D(nn.Module):
 
     def forward(self, x, t=None):
         x = self.init_conv(x)
+        print("channels",self._cal_channels(self.base_dim,self.dim_mults))
         if t is not None:
             t = self.time_embedding(t)
+        print("init",x.shape,t.shape)
         encoder_shortcuts = []
         for encoder_block in self.encoder_blocks:
             x, x_shortcut = encoder_block(x, t)
             encoder_shortcuts.append(x_shortcut)
+            print("encoder",x_shortcut.shape)
         x = self.mid_block(x)
         encoder_shortcuts.reverse()
         for decoder_block, shortcut in zip(self.decoder_blocks, encoder_shortcuts):
+           
             x = decoder_block(x, shortcut, t)
         x = self.final_conv(x)
         return x
@@ -191,4 +198,4 @@ if __name__ == "__main__":
     t = torch.randint(0, 1000, (2,))  # Example timesteps
     model = Unet3D(1000, 128, in_channels=1, out_channels=1)
     y = model(x, t)
-    print(y.shape)  # Output shape
+    print("output shape",y.shape)  # Output shape
