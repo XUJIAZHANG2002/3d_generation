@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # Load the original Unet3D
     unet = Unet3D(
         timesteps= 1000,
-        time_embedding_dim=128,
+        time_embedding_dim=256,
         base_dim=32,  # Base dimension for the UNet
         dim_mults=(1, 2, 4, 8),  # Multiplier for channel dimensions
         in_channels=1,
@@ -119,6 +119,19 @@ if __name__ == "__main__":
 
     # Wrap it with ControlNet
     model = UnetWithControlNet(unet, timesteps= 1000,
-        time_embedding_dim=128,)
+        time_embedding_dim=256,)
+    # Logic to freeze or unfreeze parameters
+    for name, param in model.named_parameters():
+        if "control" in name:
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
+    # Verify which parameters are trainable
+    print("Trainable parameters:")
+    for name, param in model.named_parameters():
+        print(f"{name}: requires_grad={param.requires_grad}")
+
+    # Forward pass
     y = model(x, c, t)
-    print(y.shape)  # Output shape
+    print(f"Output shape: {y.shape}")
