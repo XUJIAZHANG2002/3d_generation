@@ -76,12 +76,11 @@ class Diffusion_Control(nn.Module):
         for i in tqdm(range(self.timesteps - 1, -1, -1), desc="Sampling"):
             noise = torch.randn_like(x_t).to(device)
             t = torch.tensor([i for _ in range(n_samples)]).to(device)
-
-            if clipped_reverse_diffusion:
-                x_t = self._reverse_diffusion_with_clip(x_t, c_t, t, noise)
-            else:
-                x_t = self._reverse_diffusion(x_t, c_t, t, noise)
-
+            # if clipped_reverse_diffusion:
+            #     x_t = self._reverse_diffusion_with_clip(x_t, c_t, t, noise)
+            # else:
+            #     x_t = self._reverse_diffusion(x_t, c_t, t, noise)
+            x_t = self._reverse_diffusion(x_t, c_t, t, noise)
         # Rescale to [0, 1]
         x_t = (x_t + 1.) / 2.
         return x_t
@@ -150,6 +149,5 @@ if __name__ == "__main__":
         dim_mults=[1, 2, 4, 8]
     ).to(device)
     t = torch.randint(0, 1000, (2,))  # Example timesteps
-    model = Unet3D(1000, 128, in_channels=1, out_channels=1)
     y = model(x, c,t)
     print("output shape",y.shape)  # Output shape
