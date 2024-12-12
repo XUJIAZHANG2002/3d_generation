@@ -3,7 +3,7 @@ import torch
 import math
 from .unet import Unet3D
 from tqdm import tqdm
-from control_net import UnetWithControlNet
+from .control_net import UnetWithControlNet
 
 class Diffusion_Control(nn.Module):
     def __init__(self, image_size, in_channels, time_embedding_dim=256, timesteps=1000, base_dim=32, dim_mults=[1, 2, 4, 8]):
@@ -26,21 +26,21 @@ class Diffusion_Control(nn.Module):
         self.register_buffer("sqrt_one_minus_alphas_cumprod", torch.sqrt(1. - alphas_cumprod))
 
         # Initialize the base UNet
-        unet = Unet3D(
-            timesteps,
-            time_embedding_dim,
-            base_dim,  # Base dimension for the UNet
-            dim_mults,  # Multiplier for channel dimensions
+
+        self.unet = Unet3D(
+            timesteps= 1000,
+            time_embedding_dim=256,
+            base_dim=32,  # Base dimension for the UNet
+            dim_mults=(1, 2, 4, 8),  # Multiplier for channel dimensions
             in_channels=1,
             out_channels=1
         )
-
         # Wrap it with ControlNet
-        for param in unet.parameters():
+        for param in self.unet.parameters():
             param.requires_grad = False
 
         # Wrap the Unet with ControlNet
-        self.model = UnetWithControlNet(unet, timesteps=1000, time_embedding_dim=256)
+        self.model = UnetWithControlNet(self.unet, timesteps=1000, time_embedding_dim=256)
 
         # Ensure only ControlNet parameters are trainable
         for name, param in self.model.named_parameters():
@@ -50,6 +50,7 @@ class Diffusion_Control(nn.Module):
                 param.requires_grad = False
     def forward(self, x, condition, noise):
         # Forward diffusion with added noise
+
         t = torch.randint(0, self.timesteps, (x.shape[0],)).to(x.device)
 
         # Add noise to the input and conditional images
@@ -137,3 +138,18 @@ class Diffusion_Control(nn.Module):
             std = 0.0
 
         return mean + std * noise
+if __name__ == "__main__":
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x = torch.randn(2, 1, 64, 64, 64)  # Example input (batch, channel, depth, height, width)
+    c = torch.randn(2, 1, 64, 64, 64)
+    model = Diffusion_Control(
+        timesteps=1000,
+        image_size=64,
+        in_channels=1,
+        base_dim=32,
+        dim_mults=[1, 2, 4, 8]
+    ).to(device)
+    t = torch.randint(0, 1000, (2,))  # Example timesteps
+    model = Unet3D(1000, 128, in_channels=1, out_channels=1)
+    y = model(x, c,t)
+    print("output shape",y.shape)  # Output shape

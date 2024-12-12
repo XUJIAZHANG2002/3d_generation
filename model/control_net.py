@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from unet import Unet3D, EncoderBlock, ConvBnSiLu
+from .unet import Unet3D, EncoderBlock, ConvBnSiLu
 
 
 class ZeroConvBlock(nn.Module):

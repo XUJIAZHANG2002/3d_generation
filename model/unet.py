@@ -114,7 +114,7 @@ class EncoderBlock(nn.Module):
         if t is not None:
             x = self.time_mlp(x_shortcut, t)
         x = self.conv1(x)
-        print("xshape",x.shape,"shortcutshape",x_shortcut.shape)
+
         return [x, x_shortcut]
 
 
@@ -166,15 +166,15 @@ class Unet3D(nn.Module):
 
     def forward(self, x, t=None):
         x = self.init_conv(x)
-        print("channels",self._cal_channels(self.base_dim,self.dim_mults))
+
         if t is not None:
             t = self.time_embedding(t)
-        print("init",x.shape,t.shape)
+
         encoder_shortcuts = []
         for encoder_block in self.encoder_blocks:
             x, x_shortcut = encoder_block(x, t)
             encoder_shortcuts.append(x_shortcut)
-            print("encoder",x_shortcut.shape)
+
         x = self.mid_block(x)
         encoder_shortcuts.reverse()
         for decoder_block, shortcut in zip(self.decoder_blocks, encoder_shortcuts):
