@@ -1,2 +1,5 @@
-dataset/SimpleShapeDataset/
+dataset/SimpleShapeDataset/voxel_datasets
+dataset/SimpleShapeDataset/point_cloud
+dataset/SimpleShapeDataset/condition_datasets
 results/
+condition_results/
